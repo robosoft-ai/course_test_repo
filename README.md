@@ -10,13 +10,13 @@ git clone https://github.com/NVIDIA-ISAAC-ROS/realsense-ros
  ```
 ## Start the IsaacROSDev Container (from the workspace...)
  ```
-./src/isaac_ros_common/scripts/run_dev.sh  -d  ~/workspace/humble_ws/
+./src/isaac_ros_common/scripts/run_dev.sh  -d  ~/workspace/cmu_ws/
  ```
 Then run ls in the terminal to confirm that isaac_ros-dev is set to your host host workspace.    
   
 Alternatively, you can run this one from inside workspace/src/isaac_ros_common/scripts. The -d command explicity sets the workspace to workspaces/isaac_ros-dev inside the IsaacROSDev container.
 ```
-./run_dev.sh -d  ~/workspace/humble_ws/
+./run_dev.sh -d  ~/workspace/cmu_ws/
 ```
 ## Installations onto the Container....
 First, lets get updated... 
