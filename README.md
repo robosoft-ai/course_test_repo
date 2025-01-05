@@ -4,7 +4,9 @@
 We begin by cloning isaac_ros_common and nova_carter repos to the src folder of our local workspace. My local workspace is ~/workspace/humble_ws
  ```
 git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
-git clone https://github.com/NVIDIA-ISAAC-ROS/nova_carter.git  
+git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_object_detection.git
+git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam.git
+git clone https://github.com/NVIDIA-ISAAC-ROS/realsense-ros
  ```
 ## Start the IsaacROSDev Container (from the workspace...)
  ```
@@ -26,125 +28,10 @@ We'll need curl too to for later when we download assets into the isaac_ros_asse
  ```
 sudo apt-get install -y curl jq tar
  ```
-### Install LTTng-UST...
-We'll need this for SMACC later...  
- ```
-sudo apt-get install -y lttng-tools  
-sudo apt-get install -y lttng-modules-dkms  
-sudo apt-get install -y liblttng-ust-dev  
- ```
 ### Install Jetson Stats  | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_jetson/isaac_ros_jetson_stats/index.html#build-package-name)
  ```
 sudo apt-get install -y ros-humble-isaac-ros-jetson-stats
  ```
-
-### Install isaac_ros_ess  | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_dnn_stereo_depth/isaac_ros_ess/index.html#build-package-name)
-```
-sudo apt-get install -y ros-humble-isaac-ros-ess && \
-   sudo apt-get install -y ros-humble-isaac-ros-ess-models-install
-```
-#### Download the isaac_ros_ess assets | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_dnn_stereo_depth/isaac_ros_ess/index.html#download-quickstart-assets)
-
-Run these commands to download the asset from NGC...
-```
-NGC_ORG="nvidia"
-NGC_TEAM="isaac"
-PACKAGE_NAME="isaac_ros_ess"
-NGC_RESOURCE="isaac_ros_ess_assets"
-NGC_FILENAME="quickstart.tar.gz"
-MAJOR_VERSION=3
-MINOR_VERSION=2
-VERSION_REQ_URL="https://catalog.ngc.nvidia.com/api/resources/versions?orgName=$NGC_ORG&teamName=$NGC_TEAM&name=$NGC_RESOURCE&isPublic=true&pageNumber=0&pageSize=100&sortOrder=CREATED_DATE_DESC"
-AVAILABLE_VERSIONS=$(curl -s \
-    -H "Accept: application/json" "$VERSION_REQ_URL")
-LATEST_VERSION_ID=$(echo $AVAILABLE_VERSIONS | jq -r "
-    .recipeVersions[]
-    | .versionId as \$v
-    | \$v | select(test(\"^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$\"))
-    | split(\".\") | {major: .[0]|tonumber, minor: .[1]|tonumber, patch: .[2]|tonumber}
-    | select(.major == $MAJOR_VERSION and .minor <= $MINOR_VERSION)
-    | \$v
-    " | sort -V | tail -n 1
-)
-if [ -z "$LATEST_VERSION_ID" ]; then
-    echo "No corresponding version found for Isaac ROS $MAJOR_VERSION.$MINOR_VERSION"
-    echo "Found versions:"
-    echo $AVAILABLE_VERSIONS | jq -r '.recipeVersions[].versionId'
-else
-    mkdir -p ${ISAAC_ROS_WS}/isaac_ros_assets && \
-    FILE_REQ_URL="https://api.ngc.nvidia.com/v2/resources/$NGC_ORG/$NGC_TEAM/$NGC_RESOURCE/\
-versions/$LATEST_VERSION_ID/files/$NGC_FILENAME" && \
-    curl -LO --request GET "${FILE_REQ_URL}" && \
-    tar -xf ${NGC_FILENAME} -C ${ISAAC_ROS_WS}/isaac_ros_assets && \
-    rm ${NGC_FILENAME}
-fi
-```
-
-Download and install the pre-trained ESS model files...
-```
-ros2 run isaac_ros_ess_models_install install_ess_models.sh --eula
-```
-Then get back to the workspace...  
-```
-cd /workspaces/isaac_ros-dev/
-```
-### Install Nvblox From Debian...  | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nvblox/isaac_ros_nvblox/index.html#set-up-package-name)
- ```
-sudo apt-get install -y ros-humble-isaac-ros-nvblox && \
-rosdep install isaac_ros_nvblox
- ```
-#### Download the nvblox assets  | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nvblox/isaac_ros_nvblox/index.html#download-quickstart-assets)
-
-Set variables for isaac_ros_assets workspace folder...
- ```
-NGC_ORG="nvidia"
-NGC_TEAM="isaac"
-PACKAGE_NAME="isaac_ros_nvblox"
-NGC_RESOURCE="isaac_ros_nvblox_assets"
-NGC_FILENAME="quickstart.tar.gz"
-MAJOR_VERSION=3
-MINOR_VERSION=2
-VERSION_REQ_URL="https://catalog.ngc.nvidia.com/api/resources/versions?orgName=$NGC_ORG&teamName=$NGC_TEAM&name=$NGC_RESOURCE&isPublic=true&pageNumber=0&pageSize=100&sortOrder=CREATED_DATE_DESC"
-AVAILABLE_VERSIONS=$(curl -s \
-    -H "Accept: application/json" "$VERSION_REQ_URL")
-LATEST_VERSION_ID=$(echo $AVAILABLE_VERSIONS | jq -r "
-    .recipeVersions[]
-    | .versionId as \$v
-    | \$v | select(test(\"^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$\"))
-    | split(\".\") | {major: .[0]|tonumber, minor: .[1]|tonumber, patch: .[2]|tonumber}
-    | select(.major == $MAJOR_VERSION and .minor <= $MINOR_VERSION)
-    | \$v
-    " | sort -V | tail -n 1
-)
-if [ -z "$LATEST_VERSION_ID" ]; then
-    echo "No corresponding version found for Isaac ROS $MAJOR_VERSION.$MINOR_VERSION"
-    echo "Found versions:"
-    echo $AVAILABLE_VERSIONS | jq -r '.recipeVersions[].versionId'
-else
-    mkdir -p ${ISAAC_ROS_WS}/isaac_ros_assets && \
-    FILE_REQ_URL="https://api.ngc.nvidia.com/v2/resources/$NGC_ORG/$NGC_TEAM/$NGC_RESOURCE/\
-versions/$LATEST_VERSION_ID/files/$NGC_FILENAME" && \
-    curl -LO --request GET "${FILE_REQ_URL}" && \
-    tar -xf ${NGC_FILENAME} -C ${ISAAC_ROS_WS}/isaac_ros_assets && \
-    rm ${NGC_FILENAME}
-fi
- ```
-#### Download the isacc_ros_ess and isaac_ros_peoplesemsegnet models into the isaac_ros_assets folder (takes a while)
-Source setup.bash since the packages are already installed...   
-```
-source /opt/ros/humble/setup.bash
-```
-Set env variable so you don't have to manually accept every EULA...  
-```   
-export ISAAC_ROS_ACCEPT_EULA=1
- ```
-Run the shell scripts  
-```   
-ros2 run isaac_ros_ess_models_install install_ess_models.sh
-ros2 run isaac_ros_peoplesemseg_models_install install_peoplesemsegnet_vanilla.sh
-ros2 run isaac_ros_peoplesemseg_models_install install_peoplesemsegnet_shuffleseg.sh
- ```
-To test this section, use this [IsaacSim Tutorial](https://nvidia-isaac-ros.github.io/concepts/scene_reconstruction/nvblox/tutorials/tutorial_isaac_sim.html)
 
 ### Install isaac_ros_object_detection and other perception packages from Debian... (optional)
 We'll start with pointcloud_to_laserscan...  
@@ -221,85 +108,6 @@ sudo apt-get install -y ros-humble-isaac-ros-examples
 ```
 To test this section use this [IsaacSim Tutorial](https://nvidia-isaac-ros.github.io/concepts/object_detection/rtdetr/tutorial_isaac_sim.html)
 
-### Install isaac_ros_foundation_pose  | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_pose_estimation/isaac_ros_foundationpose/index.html#build-package-name)
-```
-sudo apt-get install -y ros-humble-isaac-ros-foundationpose
-```
-Then download the assets from NGC...
-```
-NGC_ORG="nvidia"
-NGC_TEAM="isaac"
-PACKAGE_NAME="isaac_ros_foundationpose"
-NGC_RESOURCE="isaac_ros_foundationpose_assets"
-NGC_FILENAME="quickstart.tar.gz"
-MAJOR_VERSION=3
-MINOR_VERSION=2
-VERSION_REQ_URL="https://catalog.ngc.nvidia.com/api/resources/versions?orgName=$NGC_ORG&teamName=$NGC_TEAM&name=$NGC_RESOURCE&isPublic=true&pageNumber=0&pageSize=100&sortOrder=CREATED_DATE_DESC"
-AVAILABLE_VERSIONS=$(curl -s \
-    -H "Accept: application/json" "$VERSION_REQ_URL")
-LATEST_VERSION_ID=$(echo $AVAILABLE_VERSIONS | jq -r "
-    .recipeVersions[]
-    | .versionId as \$v
-    | \$v | select(test(\"^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$\"))
-    | split(\".\") | {major: .[0]|tonumber, minor: .[1]|tonumber, patch: .[2]|tonumber}
-    | select(.major == $MAJOR_VERSION and .minor <= $MINOR_VERSION)
-    | \$v
-    " | sort -V | tail -n 1
-)
-if [ -z "$LATEST_VERSION_ID" ]; then
-    echo "No corresponding version found for Isaac ROS $MAJOR_VERSION.$MINOR_VERSION"
-    echo "Found versions:"
-    echo $AVAILABLE_VERSIONS | jq -r '.recipeVersions[].versionId'
-else
-    mkdir -p ${ISAAC_ROS_WS}/isaac_ros_assets && \
-    FILE_REQ_URL="https://api.ngc.nvidia.com/v2/resources/$NGC_ORG/$NGC_TEAM/$NGC_RESOURCE/\
-versions/$LATEST_VERSION_ID/files/$NGC_FILENAME" && \
-    curl -LO --request GET "${FILE_REQ_URL}" && \
-    tar -xf ${NGC_FILENAME} -C ${ISAAC_ROS_WS}/isaac_ros_assets && \
-    rm ${NGC_FILENAME}
-fi
-```
-#### Download the pretrained FoundationPose models | [Source](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_pose_estimation/isaac_ros_foundationpose/index.html#download-quickstart-assets)
-```
-mkdir -p ${ISAAC_ROS_WS}/isaac_ros_assets/models/foundationpose && \
-   cd ${ISAAC_ROS_WS}/isaac_ros_assets/models/foundationpose && \
-   wget 'https://api.ngc.nvidia.com/v2/models/nvidia/isaac/foundationpose/versions/1.0.0_onnx/files/refine_model.onnx' -O refine_model.onnx && \
-   wget 'https://api.ngc.nvidia.com/v2/models/nvidia/isaac/foundationpose/versions/1.0.0_onnx/files/score_model.onnx' -O score_model.onnx
-```
-Then we'll convert the encrypted models (.etlt) for the isaac_ros_foundationpose package to TensorRT engine plans and drop it in the isaac_ros_assets/models/isaac_ros_foundationpose folder...
-```
-/usr/src/tensorrt/bin/trtexec --onnx=${ISAAC_ROS_WS}/isaac_ros_assets/models/foundationpose/refine_model.onnx --saveEngine=${ISAAC_ROS_WS}/isaac_ros_assets/models/foundationpose/refine_trt_engine.plan --minShapes=input1:1x160x160x6,input2:1x160x160x6 --optShapes=input1:1x160x160x6,input2:1x160x160x6 --maxShapes=input1:42x160x160x6,input2:42x160x160x6
-```
-```   
-/usr/src/tensorrt/bin/trtexec --onnx=${ISAAC_ROS_WS}/isaac_ros_assets/models/foundationpose/score_model.onnx --saveEngine=${ISAAC_ROS_WS}/isaac_ros_assets/models/foundationpose/score_trt_engine.plan --minShapes=input1:1x160x160x6,input2:1x160x160x6 --optShapes=input1:1x160x160x6,input2:1x160x160x6 --maxShapes=input1:252x160x160x6,input2:252x160x160x6
-```   
-
-Then get back to the workspace...  
-```
-cd /workspaces/isaac_ros-dev/
-```
-To test this section use this [IsaacSim Tutorial](https://nvidia-isaac-ros.github.io/concepts/pose_estimation/foundationpose/tutorial_isaac_sim.html)
-
-#### Install Postgres (Optional - experimental)
-
-First install quickstart pkgs [Source](https://wiki.postgresql.org/wiki/Apt)
-```
-sudo apt install -y postgresql-common
-sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
-```
-Then install the version you want (in this case 17)
-```
-sudo apt install postgresql-17
-```
-Then install PostGIS and pgrouting [Source](https://trac.osgeo.org/postgis/wiki/UsersWikiPostGIS3UbuntuPGSQLApt)
-```
-sudo apt install postgresql-17-postgis-3
-sudo apt install postgresql-17-pgrouting
-```
-Then pgvector [Source](https://github.com/pgvector/pgvector?tab=readme-ov-file#apt)
-```
-sudo apt install postgresql-17-pgvector
-```
 
 ## Assemble the Workspace
 
