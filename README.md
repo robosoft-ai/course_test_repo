@@ -193,6 +193,9 @@ ros2 launch jetbot_control_pkg control.launch.py
   ```
  ros2 run jetbot_control_pkg motor.py
   ```
+  ```
+ros2 launch jetbot_control_pkg isaac_ros_yolov8_visualize.launch.py 
+ ```
 ## Test Commands
  ```
 ros2 topic echo /detections_output
