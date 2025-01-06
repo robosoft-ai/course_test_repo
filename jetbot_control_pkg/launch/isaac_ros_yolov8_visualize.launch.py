@@ -28,14 +28,14 @@ def generate_launch_description():
     my_package_dir = get_package_share_directory('isaac_ros_yolov8')
     return LaunchDescription([
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                my_package_dir, 'launch'),
+            PythonLaunchDescriptionSource(['/workspaces/isaac_ros-dev/src/course_test_repo/jetbot_control_pkg/launch',
                 '/yolov8_tensor_rt.launch.py'])
         ),
         Node(
             package='isaac_ros_yolov8',
             executable='isaac_ros_yolov8_visualizer.py',
-            name='yolov8_visualizer'
+            name='yolov8_visualizer',
+            remappings=[('/image','/resize/image')]
         ),
         Node(
             package='rqt_image_view',
