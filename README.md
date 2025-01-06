@@ -169,8 +169,6 @@ git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam.git
 git clone https://github.com/NVIDIA-ISAAC-ROS/realsense-ros
  ```
 
-
-
 ## Build Workspace
 Ok, now you're ready to compile everything...
 ```
@@ -190,16 +188,14 @@ Source the workspace...
 source install/setup.bash
  ```
 ```
-ros2 run sm_nav2_test_7 lidar_completion.py --ros-args -r /scan_input:=/scan2 -r /scan_output:=/scan
-```
+ros2 launch jetbot_control_pkg control.launch.py 
  ```
-ros2 launch sm_nav2_test_7 sm_nav2_test_7_launch.py 
- ```
-
+  ```
+ ros2 run jetbot_control_pkg motor.py
+  ```
 ## Test Commands
  ```
 ros2 topic echo /detections_output
 
  ```
-sudo apt-get install -y ros-humble-isaac-ros-yolov8
- ```
+
