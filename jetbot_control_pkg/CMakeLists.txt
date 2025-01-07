@@ -37,8 +37,8 @@ install(DIRECTORY
        DESTINATION share/${PROJECT_NAME}
 ) 
 
-install(DIRECTORY
-  scripts
+install(PROGRAMS
+  scripts/motor.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 # import the ROS2 python libraries
 from rclpy.node import Node
